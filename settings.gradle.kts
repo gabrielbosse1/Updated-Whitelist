@@ -24,6 +24,7 @@ stonecutter {
         if (JavaVersion.current().majorVersion.toInt() >= 25) {
             version("26.1.2", "26.1.2").buildscript = "build.unobfuscated.gradle.kts"
             version("26.2", "26.2").buildscript = "build.unobfuscated.gradle.kts"
+            version("26.3", "26.3").buildscript = "build.unobfuscated.gradle.kts"
         }
         vcsVersion = "1.21.10"
     }

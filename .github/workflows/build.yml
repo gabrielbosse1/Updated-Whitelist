@@ -41,7 +41,7 @@ jobs:
           distribution: temurin
       - uses: gradle/actions/setup-gradle@v4
       - name: build 26.x (+ unit tests)
-        run: ./gradlew :26.1.2:build :26.2:build --stacktrace
+        run: ./gradlew :26.1.2:build :26.2:build :26.3:build --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: jars-unobfuscated
@@ -66,3 +66,40 @@ jobs:
           name: plugin-jar
           path: plugin/build/libs/*.jar
           if-no-files-found: error
+
+  # Per-(Minecraft version × mod loader) test matrix: every supported game version
+  # of the Fabric mod and every supported server-mod loader of the Bukkit plugin
+  # gets its own pass/fail cell. Each cell runs that cell's `build` = compile +
+  # its full test suite (unit tests everywhere; in-game gametests on the anchors
+  # that configure them). The Bukkit-family loaders share one shaded jar (stable
+  # Bukkit API), so their cells run the same MockBukkit suite — the per-loader
+  # manifest contract is asserted in LoaderSupportTest.
+  test-matrix:
+    name: test ${{ matrix.loader }} ${{ matrix.mc }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { loader: fabric, mc: "1.18.2", java: 21, task: ":1.18.2:build" }
+          - { loader: fabric, mc: "1.19.4", java: 21, task: ":1.19.4:build" }
+          - { loader: fabric, mc: "1.20.1", java: 21, task: ":1.20.1:build" }
+          - { loader: fabric, mc: "1.20.6", java: 21, task: ":1.20.6:build" }
+          - { loader: fabric, mc: "1.21.10", java: 21, task: ":1.21.10:build" }
+          - { loader: fabric, mc: "26.1.2", java: 25, task: ":26.1.2:build" }
+          - { loader: fabric, mc: "26.2", java: 25, task: ":26.2:build" }
+          - { loader: fabric, mc: "26.3", java: 25, task: ":26.3:build" }
+          - { loader: bukkit, mc: "1.18-26.3", java: 21, task: "-p plugin build" }
+          - { loader: spigot, mc: "1.18-26.3", java: 21, task: "-p plugin build" }
+          - { loader: paper, mc: "1.18-26.3", java: 21, task: "-p plugin build" }
+          - { loader: purpur, mc: "1.18-26.3", java: 21, task: "-p plugin build" }
+          - { loader: folia, mc: "1.18-26.3", java: 21, task: "-p plugin build" }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+      - uses: gradle/actions/setup-gradle@v4
+      - name: test ${{ matrix.loader }} ${{ matrix.mc }}
+        run: ./gradlew ${{ matrix.task }} --stacktrace
