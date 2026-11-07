@@ -1,12 +1,13 @@
 # Simple Whitelist
 
-This is a Fabric mod for Minecraft 1.21 that provides a simple whitelist system based on usernames.
+This is a Fabric mod for Minecraft 1.18 through 26.3 that provides a simple whitelist system based on usernames.
 
 ## Features
 
 - **Whitelist based on usernames:** The whitelist system is based on usernames, not UUIDs. Names are case-sensitive — `Steve` and `steve` are treated as different players.
 - **Database storage:** You can choose between storing the whitelist data in a JSON file or a MySQL database.
-- **ModMenu screen (client, 1.21+):** With [ModMenu](https://modrinth.com/mod/modmenu) installed, a minimal config screen lets you toggle the whitelist — handy when you open a singleplayer world to LAN.
+- **Supported versions:** Minecraft **1.18 → 26.3** on Fabric — one jar per version band, published for each game version.
+- **ModMenu screen (client, 1.21.x):** With [ModMenu](https://modrinth.com/mod/modmenu) installed, a minimal config screen lets you toggle the whitelist — handy when you open a singleplayer world to LAN.
 
 ## Server plugin (Bukkit/Spigot/Paper/Purpur/Folia)
 
@@ -18,7 +19,7 @@ case-sensitive, username-based rules, and needs no client mod.
 - **Commands:** `/simplewhitelist add|remove|list|on|off` with aliases `swl`, `swh`,
   `swhitelist`; permission `simplewhitelist.command` (default: op — grant it via any
   permissions plugin, e.g. LuckPerms).
-- **Supported versions:** Minecraft **1.18 → 26.2** (Java 17+ servers) — one jar, thanks
+- **Supported versions:** Minecraft **1.18 → 26.3** (Java 17+ servers) — one jar, thanks
   to the stable Bukkit API.
 - **Build locally:** `./gradlew -p plugin build` → `plugin/build/libs/*.jar`.
 - **Try it on a real server:** `./gradlew -p plugin runServer` (override the version with
@@ -77,5 +78,27 @@ The default configuration file is `config\SimpleWhitelist\config.json`:
 
 1. Download the latest release of Simple Whitelist from [here](https://modrinth.com/mod/simple-whitelist).
 2. Place the `.jar` file in your `mods` folder.
+
+## Testing
+
+Every supported Minecraft version and mod loader has its own test cell:
+
+- **Fabric mod, each game version:** `./gradlew build` — unit tests run on every
+  version node (1.18.2, 1.19.4, 1.20.1, 1.20.6, 1.21.10, 26.1.2, 26.2, 26.3), and
+  in-game gametests (booted server) additionally run on the anchors that support
+  the gametest harness. The 26.x nodes need JDK 25+ — they are only registered
+  when the running JDK can build them.
+- **Bukkit/Spigot/Paper/Purpur/Folia:** `./gradlew -p plugin build` — unit +
+  MockBukkit tests, including the per-loader manifest contract
+  (`LoaderSupportTest`).
+- **Real servers:** `./scripts/smoke-server.sh <paper|purpur|folia|spigot> <mc>` boots
+  that server with the shaded plugin jar and verifies in-server that the plugin
+  enables and `swl add/remove/list` behave (including case sensitivity). CI runs
+  a smoke cell per loader across the version range (Folia currently tops out at
+  26.2; the `bukkit` loader has no 1.18+ server to boot — upstream stopped at
+  1.12 — so it is covered by the shared Bukkit-API suite).
+- **Whole matrix at once:** `./scripts/test-matrix.sh` runs every
+  (Minecraft version × loader) cell and prints a pass/fail table; CI runs the
+  same matrix in the `test-matrix` job of the build workflow.
 
 

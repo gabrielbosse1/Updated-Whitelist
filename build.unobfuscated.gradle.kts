@@ -41,8 +41,16 @@ val u = when (mcVersion) {
         fapi = "0.155.2+26.2",
         flk = "1.13.13+kotlin.2.4.10",
         runtimeJava = 25,
-        depends = ">=26.2 <27",
+        // 26.3 is its own anchor, so this jar's band stops before it.
+        depends = ">=26.2 <26.3",
         gameVersions = listOf("26.2"),
+    )
+    "26.3" -> Unobf(
+        fapi = "0.161.0+26.3",
+        flk = "1.14.2+kotlin.2.4.21",
+        runtimeJava = 25,
+        depends = ">=26.3 <27",
+        gameVersions = listOf("26.3"),
     )
     else -> error("Unconfigured Minecraft version: $mcVersion")
 }
@@ -62,8 +70,8 @@ dependencies {
     implementation("net.fabricmc.fabric-api:fabric-api:${u.fapi}")
     // fabric-language-kotlin is a runtime-only language adapter (declared in
     // fabric.mod.json depends and provided by the user). It is deliberately NOT on
-    // the compile classpath: flk ${u.flk} bundles kotlin-stdlib 2.4.10, whose
-    // metadata our Kotlin 2.0 compiler can't read. Our code never references flk.
+    // the compile classpath: flk bundles a newer kotlin-stdlib than our compiler
+    // should read metadata from. Our code never references flk.
     // fabric-permissions-api is not published for 26+; commands fall back to the
     // vanilla operator level on this version (see the >=1.22 branch in Permission).
 

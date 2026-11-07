@@ -41,7 +41,7 @@ jobs:
           distribution: temurin
       - uses: gradle/actions/setup-gradle@v4
       - name: build 26.x (+ unit tests)
-        run: ./gradlew :26.1.2:build :26.2:build --stacktrace
+        run: ./gradlew :26.1.2:build :26.2:build :26.3:build --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: jars-unobfuscated
@@ -66,3 +66,83 @@ jobs:
           name: plugin-jar
           path: plugin/build/libs/*.jar
           if-no-files-found: error
+
+  # Per-(Minecraft version × mod loader) test matrix: every supported game version
+  # of the Fabric mod and every supported server-mod loader of the Bukkit plugin
+  # gets its own pass/fail cell. Each cell runs that cell's `build` = compile +
+  # its full test suite (unit tests everywhere; in-game gametests on the anchors
+  # that configure them). The Bukkit-family loaders share one shaded jar (stable
+  # Bukkit API), so their cells run the same MockBukkit suite — the per-loader
+  # manifest contract is asserted in LoaderSupportTest.
+  test-matrix:
+    name: test ${{ matrix.loader }} ${{ matrix.mc }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { loader: fabric, mc: "1.18.2", java: 21, task: ":1.18.2:build" }
+          - { loader: fabric, mc: "1.19.4", java: 21, task: ":1.19.4:build" }
+          - { loader: fabric, mc: "1.20.1", java: 21, task: ":1.20.1:build" }
+          - { loader: fabric, mc: "1.20.6", java: 21, task: ":1.20.6:build" }
+          - { loader: fabric, mc: "1.21.10", java: 21, task: ":1.21.10:build" }
+          - { loader: fabric, mc: "26.1.2", java: 25, task: ":26.1.2:build" }
+          - { loader: fabric, mc: "26.2", java: 25, task: ":26.2:build" }
+          - { loader: fabric, mc: "26.3", java: 25, task: ":26.3:build" }
+          - { loader: bukkit, mc: "1.18-26.3", java: 21, task: "-p plugin build" }
+          - { loader: spigot, mc: "1.18-26.3", java: 21, task: "-p plugin build" }
+          - { loader: paper, mc: "1.18-26.3", java: 21, task: "-p plugin build" }
+          - { loader: purpur, mc: "1.18-26.3", java: 21, task: "-p plugin build" }
+          - { loader: folia, mc: "1.18-26.3", java: 21, task: "-p plugin build" }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+      - uses: gradle/actions/setup-gradle@v4
+      - name: test ${{ matrix.loader }} ${{ matrix.mc }}
+        run: ./gradlew ${{ matrix.task }} --stacktrace
+
+  # Real-server smoke tests per mod loader: boot each server flavor with the
+  # shaded plugin jar and verify the plugin enables and its whitelist commands
+  # work in-server (see scripts/smoke-server.sh). bukkit has no 1.18+ server
+  # (upstream stopped at 1.12), so it is covered by the shared Bukkit-API suite
+  # above; spigot boots via BuildTools (its only distribution channel).
+  smoke:
+    name: smoke ${{ matrix.loader }} ${{ matrix.mc }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { loader: paper, mc: "1.18.2", java: 21 }
+          - { loader: paper, mc: "1.21.11", java: 21 }
+          - { loader: paper, mc: "26.3", java: 25 }
+          - { loader: purpur, mc: "1.21.11", java: 21 }
+          - { loader: purpur, mc: "26.3", java: 25 }
+          - { loader: folia, mc: "26.2", java: 25 } # no 26.3 Folia build yet
+          - { loader: spigot, mc: "26.3", java: 25 }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+      - uses: gradle/actions/setup-gradle@v4
+      - name: build plugin jar
+        run: ./gradlew -p plugin shadowJar --stacktrace
+      - name: boot ${{ matrix.loader }} ${{ matrix.mc }} with the plugin
+        run: ./scripts/smoke-server.sh ${{ matrix.loader }} ${{ matrix.mc }}
+      - name: upload server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-logs-${{ matrix.loader }}-${{ matrix.mc }}
+          path: |
+            run/**/server.log
+            run/**/BuildTools.log
+            run/**/server.properties
+            run/**/eula.txt
+          if-no-files-found: ignore
+          retention-days: 3

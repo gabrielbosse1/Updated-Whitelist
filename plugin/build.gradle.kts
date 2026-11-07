@@ -114,11 +114,11 @@ publishMods {
         projectId.set(providers.gradleProperty("modrinth_id"))
         accessToken.set(providers.environmentVariable("MODRINTH_TOKEN"))
         // Stable Bukkit API — one jar spans the range; mod-publish resolves the concrete
-        // version list from Modrinth at publish time. Start at 1.20 (our plugin.yml
-        // api-version); widen `end` once the plugin is verified on newer servers.
+        // version list from Modrinth at publish time. Start at 1.18 (our plugin.yml
+        // api-version); widen `end` when the plugin is verified on newer servers.
         minecraftVersionRange {
             start = "1.18"
-            end = "26.2"
+            end = "26.3"
         }
     }
 }
