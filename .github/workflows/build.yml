@@ -103,3 +103,34 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: test ${{ matrix.loader }} ${{ matrix.mc }}
         run: ./gradlew ${{ matrix.task }} --stacktrace
+
+  # Real-server smoke tests per mod loader: boot each server flavor with the
+  # shaded plugin jar and verify the plugin enables and its whitelist commands
+  # work in-server (see scripts/smoke-server.sh). bukkit has no 1.18+ server
+  # (upstream stopped at 1.12), so it is covered by the shared Bukkit-API suite
+  # above; spigot boots via BuildTools (its only distribution channel).
+  smoke:
+    name: smoke ${{ matrix.loader }} ${{ matrix.mc }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { loader: paper, mc: "1.18.2", java: 21 }
+          - { loader: paper, mc: "1.21.11", java: 21 }
+          - { loader: paper, mc: "26.3", java: 25 }
+          - { loader: purpur, mc: "1.21.11", java: 21 }
+          - { loader: purpur, mc: "26.3", java: 25 }
+          - { loader: folia, mc: "26.2", java: 25 } # no 26.3 Folia build yet
+          - { loader: spigot, mc: "26.3", java: 25 }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+      - uses: gradle/actions/setup-gradle@v4
+      - name: build plugin jar
+        run: ./gradlew -p plugin shadowJar --stacktrace
+      - name: boot ${{ matrix.loader }} ${{ matrix.mc }} with the plugin
+        run: ./scripts/smoke-server.sh ${{ matrix.loader }} ${{ matrix.mc }}

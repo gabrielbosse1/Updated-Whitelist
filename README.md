@@ -91,6 +91,12 @@ Every supported Minecraft version and mod loader has its own test cell:
 - **Bukkit/Spigot/Paper/Purpur/Folia:** `./gradlew -p plugin build` — unit +
   MockBukkit tests, including the per-loader manifest contract
   (`LoaderSupportTest`).
+- **Real servers:** `./scripts/smoke-server.sh <paper|purpur|folia|spigot> <mc>` boots
+  that server with the shaded plugin jar and verifies in-server that the plugin
+  enables and `swl add/remove/list` behave (including case sensitivity). CI runs
+  a smoke cell per loader across the version range (Folia currently tops out at
+  26.2; the `bukkit` loader has no 1.18+ server to boot — upstream stopped at
+  1.12 — so it is covered by the shared Bukkit-API suite).
 - **Whole matrix at once:** `./scripts/test-matrix.sh` runs every
   (Minecraft version × loader) cell and prints a pass/fail table; CI runs the
   same matrix in the `test-matrix` job of the build workflow.
