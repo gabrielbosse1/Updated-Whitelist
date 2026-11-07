@@ -48,6 +48,10 @@ have_java="$(java -version 2>&1 | head -1 | sed -E 's/.*"([0-9]+).*/\1/')"
 
 rm -rf "$DIR"
 mkdir -p "$DIR/plugins"
+# Absolute from here on: the server runs with $DIR as its CWD (it looks for
+# eula.txt, server.properties and plugins/ in the CWD, not next to the jar).
+DIR="$(cd "$DIR" && pwd)"
+LOG="$DIR/server.log"
 cp "$JAR" "$DIR/plugins/"
 echo "eula=true" > "$DIR/eula.txt"
 cat > "$DIR/server.properties" <<EOF
@@ -131,7 +135,9 @@ trap cleanup EXIT
 FEEDER_PID=$!
 
 echo "smoke($LOADER $MC): booting (port $PORT)..."
-timeout 600 java -Xms512M -Xmx2G -jar "$DIR/server.jar" nogui < "$FEEDER" > "$LOG" 2>&1
+# Run from $DIR so the server picks up eula.txt/server.properties/plugins/;
+# the FIFO and log stay on absolute paths set up by the outer shell.
+( cd "$DIR" && exec timeout 600 java -Xms512M -Xmx2G -jar server.jar nogui ) < "$FEEDER" > "$LOG" 2>&1
 rc=$?
 
 expect() {
@@ -146,6 +152,6 @@ expect "smokeuser not found on the whitelist"
 expect "Players on the whitelist: SmokeUser"
 expect "Disabling SimpleWhitelist"
 
-[[ $rc -eq 0 ]] || die "server exited with code $rc"
+[[ $rc -eq 0 ]] || { echo "--- log tail ---"; tail -30 "$LOG"; die "server exited with code $rc"; }
 
 echo "smoke($LOADER $MC): PASS"

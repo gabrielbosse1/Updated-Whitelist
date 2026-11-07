@@ -134,3 +134,15 @@ jobs:
         run: ./gradlew -p plugin shadowJar --stacktrace
       - name: boot ${{ matrix.loader }} ${{ matrix.mc }} with the plugin
         run: ./scripts/smoke-server.sh ${{ matrix.loader }} ${{ matrix.mc }}
+      - name: upload server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-logs-${{ matrix.loader }}-${{ matrix.mc }}
+          path: |
+            run/**/server.log
+            run/**/BuildTools.log
+            run/**/server.properties
+            run/**/eula.txt
+          if-no-files-found: ignore
+          retention-days: 3
