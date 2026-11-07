@@ -24,7 +24,33 @@ PORT="${SMOKE_PORT:-25599}"
 DIR="run/smoke-$LOADER-$MC"
 LOG="$DIR/server.log"
 
-die() { echo "smoke($LOADER $MC): FAIL: $*" >&2; exit 1; }
+die() {
+    echo "smoke($LOADER $MC): FAIL: $*" >&2
+    for f in "${LOG:-}" "$DIR/BuildTools.log"; do
+        if [[ -n "$f" && -f "$f" ]]; then
+            echo "--- tail: $f ---"
+            tail -20 "$f"
+        fi
+    done
+    # In CI, surface the failure where it is readable without the raw log:
+    # job annotations and the run's step summary.
+    if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+        echo "::error title=smoke $LOADER $MC::$*"
+        {
+            echo "### smoke $LOADER $MC — FAIL: $*"
+            for f in "${LOG:-}" "$DIR/BuildTools.log"; do
+                if [[ -n "$f" && -f "$f" ]]; then
+                    echo "<details><summary>tail: $f</summary>"
+                    echo '```'
+                    tail -40 "$f"
+                    echo '```'
+                    echo '</details>'
+                fi
+            done
+        } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+    fi
+    exit 1
+}
 
 command -v curl >/dev/null || die "curl is required"
 command -v python3 >/dev/null || die "python3 is required"
@@ -95,13 +121,18 @@ PY
 
 fetch_spigot() {
     command -v git >/dev/null || die "git is required to build Spigot"
-    command -v mvn >/dev/null || die "maven is required to build Spigot"
     echo "smoke(spigot $MC): building with BuildTools (this takes a while)..."
     curl -fsSL -o "$DIR/BuildTools.jar" \
         "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar" \
         || die "BuildTools download failed"
-    (cd "$DIR" && timeout 1800 java -jar BuildTools.jar --rev "$MC" > BuildTools.log 2>&1) \
-        || { tail -20 "$DIR/BuildTools.log"; die "BuildTools failed"; }
+    # BuildTools runs git commit/git am while applying patches, and CI runners
+    # have no git identity configured — provide one via the environment.
+    (
+        cd "$DIR" && \
+        GIT_AUTHOR_NAME=simple-whitelist-smoke GIT_AUTHOR_EMAIL=smoke@invalid.example \
+        GIT_COMMITTER_NAME=simple-whitelist-smoke GIT_COMMITTER_EMAIL=smoke@invalid.example \
+        timeout 1800 java -jar BuildTools.jar --rev "$MC" > BuildTools.log 2>&1
+    ) || die "BuildTools failed"
     [[ -f "$DIR/spigot-$MC.jar" ]] || die "BuildTools did not produce spigot-$MC.jar"
     cp "$DIR/spigot-$MC.jar" "$DIR/server.jar"
 }
@@ -141,7 +172,7 @@ echo "smoke($LOADER $MC): booting (port $PORT)..."
 rc=$?
 
 expect() {
-    grep -qF "$1" "$LOG" || { echo "--- log tail ---"; tail -30 "$LOG"; die "missing expected log line: $1"; }
+    grep -qF "$1" "$LOG" || die "missing expected log line: $1"
 }
 expect "Enabling SimpleWhitelist"
 expect "Done ("
@@ -152,6 +183,6 @@ expect "smokeuser not found on the whitelist"
 expect "Players on the whitelist: SmokeUser"
 expect "Disabling SimpleWhitelist"
 
-[[ $rc -eq 0 ]] || { echo "--- log tail ---"; tail -30 "$LOG"; die "server exited with code $rc"; }
+[[ $rc -eq 0 ]] || die "server exited with code $rc"
 
 echo "smoke($LOADER $MC): PASS"
