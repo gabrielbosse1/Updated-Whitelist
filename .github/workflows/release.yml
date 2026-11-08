@@ -33,8 +33,13 @@ jobs:
             echo "arg=" >> "$GITHUB_OUTPUT"
             echo "plugin_arg=" >> "$GITHUB_OUTPUT"
           fi
+      # Gradle must run on JDK 25: settings.gradle.kts only registers the 26.x
+      # nodes when the JVM running Gradle is 25+, and setup-java's multi-version
+      # default is not guaranteed — pin it via setup-java's per-version env var.
       - name: assemble all versions (jars, no gametest boot)
-        run: ./gradlew assemble ${{ steps.ver.outputs.arg }} --stacktrace
+        run: |
+          export JAVA_HOME="$JAVA_HOME_25_X64"
+          ./gradlew assemble ${{ steps.ver.outputs.arg }} --stacktrace
 
       - name: Build plugin jar
         run: ./gradlew -p plugin clean build ${{ steps.ver.outputs.plugin_arg }} --stacktrace
