@@ -1,13 +1,15 @@
-# Simple Whitelist
+# Simple Whitelist — updated fork
 
-This is a Fabric mod for Minecraft 1.18 through 26.3 that provides a simple whitelist system based on usernames.
+This is **just a fork** of [iSlavok/Simple-Whitelist](https://github.com/iSlavok/Simple-Whitelist) that updates faster — I need it for my own server, so newer Minecraft versions get picked up here quickly. Almost all of the code is the original author's work, not mine. Whenever there's something worth keeping, I send pull requests back to the original project, so the official version stays the source of truth.
+
+It's a simple whitelist system based on usernames, available as a Fabric mod and as a server plugin (Bukkit/Spigot/Paper/Purpur/Folia).
 
 ## Features
 
 - **Whitelist based on usernames:** The whitelist system is based on usernames, not UUIDs. Names are case-sensitive — `Steve` and `steve` are treated as different players.
 - **Database storage:** You can choose between storing the whitelist data in a JSON file or a MySQL database.
-- **Supported versions:** Minecraft **1.18 → 26.3** on Fabric — one jar per version band, published for each game version.
-- **ModMenu screen (client, 1.21.x):** With [ModMenu](https://modrinth.com/mod/modmenu) installed, a minimal config screen lets you toggle the whitelist — handy when you open a singleplayer world to LAN.
+- **Supported versions:** Minecraft **1.18 → 26.3** on Fabric — one jar per version band.
+- **ModMenu screen (client, 1.21.x):** With ModMenu installed, a minimal config screen lets you toggle the whitelist — handy when you open a singleplayer world to LAN.
 
 ## Server plugin (Bukkit/Spigot/Paper/Purpur/Folia)
 
@@ -25,20 +27,43 @@ case-sensitive, username-based rules, and needs no client mod.
 - **Try it on a real server:** `./gradlew -p plugin runServer` (override the version with
   `-Prun_mc=1.21.8`).
 
-The plugin lives in a standalone Gradle build under `plugin/` and publishes to the same
-Modrinth project as the mod. Client-only features (the ModMenu config screen) are mod-only
-and have no plugin equivalent.
+The plugin lives in a standalone Gradle build under `plugin/`. Client-only features (the
+ModMenu config screen) are mod-only and have no plugin equivalent.
 
 ## Dependencies
 
-Required:
+Required (mod):
 
-- **[Fabric API](https://modrinth.com/mod/fabric-api)**
-- **[Fabric Language Kotlin](https://modrinth.com/mod/fabric-language-kotlin)**
+- Fabric API
+- Fabric Language Kotlin
 
-Optional:
+Optional (mod):
 
-- **A [fabric-permissions-api](https://github.com/lucko/fabric-permissions-api) provider** (e.g. **[LuckPerms](https://modrinth.com/mod/luckperms)**) for permission-based command access. Without it, commands fall back to vanilla operator level 4.
+- A fabric-permissions-api provider (e.g. LuckPerms) for permission-based command access.
+  Without it, commands fall back to vanilla operator level 4.
+
+## Installation
+
+**Download the ready jar for the newest Minecraft version (26.3):**
+[`simple-whitelist-1.0.4+mc26.3.jar`](https://github.com/gabrielbosse1/Updated-Whitelist/releases/download/v1.0.4/simple-whitelist-1.0.4+mc26.3.jar)
+— jars for every other supported Minecraft version (the `+mc<version>` files) and the
+Bukkit plugin jar are on the [Releases page](https://github.com/gabrielbosse1/Updated-Whitelist/releases).
+Pick the jar matching your server's version, then drop it into your `mods` folder (mod) or
+`plugins` folder (plugin).
+
+| Your server runs | Grab this jar |
+|---|---|
+| 26.3 | `simple-whitelist-1.0.4+mc26.3.jar` |
+| 26.2 | `simple-whitelist-1.0.4+mc26.2.jar` |
+| 26.1.x | `simple-whitelist-1.0.4+mc26.1.2.jar` |
+| 1.21.x (incl. 1.21.11) | `simple-whitelist-1.0.4+mc1.21.10.jar` |
+| 1.20.5 – 1.20.6 | `simple-whitelist-1.0.4+mc1.20.6.jar` |
+| 1.20 – 1.20.4 | `simple-whitelist-1.0.4+mc1.20.1.jar` |
+| 1.19.x | `simple-whitelist-1.0.4+mc1.19.4.jar` |
+| 1.18.x | `simple-whitelist-1.0.4+mc1.18.2.jar` |
+
+Or build from source — `./gradlew build` for the mod, `./gradlew -p plugin build` for the
+plugin.
 
 ## Configuration
 
@@ -68,16 +93,11 @@ The default configuration file is `config\SimpleWhitelist\config.json`:
 - **`simplewhitelist on`:** Enable the whitelist.
 - **`simplewhitelist off`:** Disable the whitelist.
 
-**`simplewhitelist`aliases:** `swl`, `swh`, `swhitelist`
+**`simplewhitelist` aliases:** `swl`, `swh`, `swhitelist`
 
 ## Permissions
 
 - **`simplewhitelist.command`:** Allows players to use the whitelist commands.
-
-## Installation
-
-1. Download the latest release of Simple Whitelist from [here](https://modrinth.com/mod/simple-whitelist).
-2. Place the `.jar` file in your `mods` folder.
 
 ## Testing
 
@@ -101,4 +121,8 @@ Every supported Minecraft version and mod loader has its own test cell:
   (Minecraft version × loader) cell and prints a pass/fail table; CI runs the
   same matrix in the `test-matrix` job of the build workflow.
 
+## Credits
 
+Almost all of the code is by **iSlavok**, the original author of Simple Whitelist — this
+fork is only here so the versions I need for my server get updated faster. Improvements go
+back to the original project as pull requests.
