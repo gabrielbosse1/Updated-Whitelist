@@ -44,9 +44,26 @@ Optional (mod):
 
 ## Installation
 
-Build from source — `./gradlew build` for the mod, `./gradlew -p plugin build` for the
-plugin — or grab the jars from this fork's **Releases** tab. Then drop the jar into your
-`mods` folder (mod) or `plugins` folder (plugin).
+**Download the ready jar for the newest Minecraft version (26.3):**
+[`simple-whitelist-1.0.4+mc26.3.jar`](https://github.com/gabrielbosse1/Updated-Whitelist/releases/download/v1.0.4/simple-whitelist-1.0.4+mc26.3.jar)
+— jars for every other supported Minecraft version (the `+mc<version>` files) and the
+Bukkit plugin jar are on the [Releases page](https://github.com/gabrielbosse1/Updated-Whitelist/releases).
+Pick the jar matching your server's version, then drop it into your `mods` folder (mod) or
+`plugins` folder (plugin).
+
+| Your server runs | Grab this jar |
+|---|---|
+| 26.3 | `simple-whitelist-1.0.4+mc26.3.jar` |
+| 26.2 | `simple-whitelist-1.0.4+mc26.2.jar` |
+| 26.1.x | `simple-whitelist-1.0.4+mc26.1.2.jar` |
+| 1.21.x (incl. 1.21.11) | `simple-whitelist-1.0.4+mc1.21.10.jar` |
+| 1.20.5 – 1.20.6 | `simple-whitelist-1.0.4+mc1.20.6.jar` |
+| 1.20 – 1.20.4 | `simple-whitelist-1.0.4+mc1.20.1.jar` |
+| 1.19.x | `simple-whitelist-1.0.4+mc1.19.4.jar` |
+| 1.18.x | `simple-whitelist-1.0.4+mc1.18.2.jar` |
+
+Or build from source — `./gradlew build` for the mod, `./gradlew -p plugin build` for the
+plugin.
 
 ## Configuration
 

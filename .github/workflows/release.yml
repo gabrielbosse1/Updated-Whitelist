@@ -54,12 +54,7 @@ jobs:
           fail_on_unmatched_files: true
           generate_release_notes: true
 
-      - name: Publish mod to Modrinth
-        env:
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-        run: ./gradlew publishMods ${{ steps.ver.outputs.arg }} --stacktrace
-
-      - name: Publish plugin to Modrinth
-        env:
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-        run: ./gradlew -p plugin publishMods ${{ steps.ver.outputs.plugin_arg }} --stacktrace
+      # This fork ships its jars on GitHub Releases only. The Modrinth page belongs
+      # to the original project, and this fork's stance is to send PRs upstream
+      # instead of publishing there — so the upstream publishMods steps are
+      # intentionally not run here.
